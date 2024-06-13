@@ -1,0 +1,23 @@
+plugins {
+    id 'java'
+}
+
+group 'com.study'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.springframework:spring-context:${spring_version}"
+    implementation "com.typesafe.akka:akka-actor_${scala_version}:${typesafe_akka_version}"
+
+    testImplementation "org.springframework:spring-test:${spring_version}"
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+test {
+    useJUnitPlatform()
+}

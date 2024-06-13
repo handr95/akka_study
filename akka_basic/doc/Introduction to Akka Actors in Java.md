@@ -1,7 +1,6 @@
 # Introduction to Akka Actors in Java
 
 > [https://www.baeldung.com/akka-actors-java](https://www.baeldung.com/akka-actors-java) 번역
-> 
 
 ## 1. **Introduction**
 
@@ -20,7 +19,7 @@ Akka는 액터 모델을 활용하여 Java 또는 Scala를 사용하여 동시 �
 - 액터는 자신의 상태와 애플리케이션 로직의 일부를 캡슐화합니다.
 - 액터는 비동기 메시지를 통해서만 상호 작용하고 직접적인 메서드 호출을 통해서는 상호 작용하지 않습니다.
 - 각 액터에는 고유한 주소와 다른 액터가 메시지를 전달할 수 있는 메일박스가 있습니다.
-액터는 메일박스에 있는 모든 메시지를 순차적으로 처리합니다(메일박스의 기본 구현은 FIFO 큐입니다).
+  액터는 메일박스에 있는 모든 메시지를 순차적으로 처리합니다(메일박스의 기본 구현은 FIFO 큐입니다).
 - 액터 시스템은 트리와 같은 계층 구조로 구성됩니다.
 - 액터는 다른 액터를 생성할 수 있고, 다른 액터에게 메시지를 보낼 수 있으며, 자신 또는 생성된 액터를 중지할 수 있습니다.
 
@@ -108,14 +107,20 @@ Props 클래스에는 액터 구성이 포함되어 있습니다. 디스패처, 
 
 예를 들어 텍스트 처리를 수행할 액터를 정의해 보겠습니다. 액터는 처리를 수행할 문자열 객체를 받습니다:
 
-```cpp
+```java
 import akka.actor.AbstractActor;
 import akka.actor.Props;
 
 public class ReadingActor extends AbstractActor {
     private String text;
+    
+    public ReadingActor(String text) {
+        this.text = text;
+    }
 
+		// 팩토리 메서드
     public static Props props(String text) {
+		    // ReadingActor의 생성자에 text를 넘김
         return Props.create(ReadingActor.class, text);
     }
 
@@ -129,7 +134,7 @@ public class ReadingActor extends AbstractActor {
 
 이제 이 유형의 액터 인스턴스를 생성하려면 props() 팩토리 메서드를 사용하여 생성자에 String 인수를 전달하기만 하면 됩니다:
 
-```cpp
+```java
  ActorRef readingActorRef = system.actorOf(ReadingActor.props(TEXT), "readingActor");
 ```
 
@@ -149,20 +154,20 @@ Akka 액터 시스템 내에서 메시지는 메서드를 사용하여 전송됩
 - *ask()*
 - *forward()*
 
-**메시지를 보내고 싶지만 응답을 기대하지 않을 때는 tell() 메서드를 사용할 수 있습니다.** 이는 성능 관점에서 가장 효율적인 방법입니다:
+**메시지를 보내고 싶지만 응답을 기다리고 싶지 않을 때는 tell() 메서드를 사용할 수 있습니다.** 이는 성능 관점에서 가장 효율적인 방법입니다:
 
 ```cpp
 readingActorRef.tell(new ReadingActor.ReadLines(), ActorRef.noSender());
 ```
 
-첫 번째 매개변수는 액터 주소 readingActorRef로 보내는 메시지를 나타냅니다.
+첫 번째 매개변수는 readingActorRef로 보내는 메시지를 나타냅니다.
 
 두 번째 파라미터는 발신자가 누구인지 지정합니다. 메시지를 받는 액터가 발신자가 아닌 다른 액터(예: 보내는 액터의 부모)에게 응답을 보내야 할 때 유용합니다.
 
 일반적으로 응답을 기대하지 않으므로 두 번째 매개변수를 null 또는 ActorRef.noSender()로 설정할 수 있습니다. **액터로부터 응답이 필요한 경우 ask() 메서드를 사용할 수 있습니다:**
 
-```cpp
-CompletableFuture<Object> future = ask(wordCounterActorRef, 
+```java
+CompletableFuture<Object> future = ask(wordCounterActorRef,
 new WordCounterActor.CountWords(line), 1000).toCompletableFuture();
 ```
 
@@ -191,16 +196,17 @@ public Receive createReceive() {
 
 또한 tell()와 유사한 forward() 메서드도 있습니다. 차이점은 메시지를 보낼 때 메시지의 원래 발신자가 유지되므로 메시지를 전달하는 액터는 중개 액터 역할만 수행한다는 점입니다:
 
-```cpp
+```java
 printerActorRef.forward(
   new PrinterActor.PrintFinalResult(totalNumberOfWords), getContext());
+
 ```
 
 ### **5.2. Receiving Messages**
 
 **각 액터는 수신되는 모든 메시지를 처리하는 createReceive() 메서드를 구현합니다.** receiveBuilder()는 스위치 문처럼 작동하여 수신된 메시지를 정의된 메시지 유형과 일치시키려고 시도합니다:
 
-```cpp
+```java
 public Receive createReceive() {
     return receiveBuilder().matchEquals("printit", p -> {
         System.out.println("The address of this actor is: " + getSelf());
@@ -214,11 +220,11 @@ public Receive createReceive() {
 
 액터 사용이 끝나면 ActorRefFactory  인터페이스에서 stop() 메서드를 호출하여 액터를 중지할 수 있습니다:
 
-```cpp
+```java
 system.stop(myActorRef);
 ```
 
-이 메서드를 사용하여 자식 액터 또는 액터 자체를 종료할 수 있습니다. 중지는 비동기적으로 수행되며 액터가 종료되기 전에 **현재 메시지 처리가 완료**된다는 점에 유의하세요**. 액터 메일함에는 더 이상 수신 메시지가 수락되지 않습니다.**
+이 메서드를 사용하여 자식 액터 또는 액터 자체를 종료할 수 있습니다. 중지는 비동기적으로 수행되며 액터가 종료되기 전에 **현재 메시지 처리가 완료**된다는 점에 유의하세요. **액터 메일함에는 더 이상 수신 메시지가 수락되지 않습니다.**
 
 **부모 액터를 중지하면** 해당 액터에 의해 생성된 **모든 자식 액터에도 킬 신호를 보냅니다.**
 
@@ -237,6 +243,12 @@ myActorRef.tell(PoisonPill.getInstance(), ActorRef.noSender());
 ```
 
 포이즌필 메시지는 다른 메시지와 마찬가지로 액터가 수신하여 대기열에 넣습니다. **액터는 포이즌필 메시지에 도달할 때까지 모든 메시지를 처리합니다.** 그래야만 액터가 종료 프로세스를 시작합니다.
+
+### `PoisonPill`의 특징
+
+1. **안전한 종료**: `PoisonPill` 메시지를 받은 Actor는 현재 처리 중인 메시지와 메시지 큐에 있는 모든 메시지를 처리한 후 종료됩니다.
+2. **메시지의 순서 보장**: `PoisonPill` 메시지는 큐의 다른 메시지들과 동일하게 처리되므로, 메시지의 순서가 보장됩니다.
+3. **간단한 사용법**: ActorRef에 단순히 `PoisonPill` 메시지를 보내기만 하면 됩니다.
 
 액터를 종료하는 데 사용되는 또 다른 특수 메시지는 Kill 메시지입니다. 포이즌필과 달리, 이 메시지를 처리할 때 액터는 ActorKilledException을 던집니다:
 

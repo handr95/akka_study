@@ -1,3 +1,4 @@
 rootProject.name = 'akka_study'
 include 'akka_basic'
+include 'akka_spring'
 
